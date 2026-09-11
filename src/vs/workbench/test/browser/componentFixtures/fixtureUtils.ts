@@ -263,6 +263,8 @@ class NullStorageService implements IStorageService {
 // as raw text (not parsed JSON) — this lets VS Code's JSONC parser handle
 // comments and trailing commas the way it does in the real product.
 /* eslint-disable local/code-import-patterns */
+import dark_2026 from '../../../../../../extensions/theme-defaults/themes/2026-dark.json' with { type: 'json' };
+import light_2026 from '../../../../../../extensions/theme-defaults/themes/2026-light.json' with { type: 'json' };
 import dark_modern from '../../../../../../extensions/theme-defaults/themes/dark_modern.json' with { type: 'json' };
 import dark_plus from '../../../../../../extensions/theme-defaults/themes/dark_plus.json' with { type: 'json' };
 import dark_vs from '../../../../../../extensions/theme-defaults/themes/dark_vs.json' with { type: 'json' };
@@ -271,6 +273,11 @@ import hc_light from '../../../../../../extensions/theme-defaults/themes/hc_ligh
 import light_modern from '../../../../../../extensions/theme-defaults/themes/light_modern.json' with { type: 'json' };
 import light_plus from '../../../../../../extensions/theme-defaults/themes/light_plus.json' with { type: 'json' };
 import light_vs from '../../../../../../extensions/theme-defaults/themes/light_vs.json' with { type: 'json' };
+import abyss from '../../../../../../extensions/theme-abyss/themes/abyss-color-theme.json' with { type: 'json' };
+import monokai from '../../../../../../extensions/theme-monokai/themes/monokai-color-theme.json' with { type: 'json' };
+import quietlight from '../../../../../../extensions/theme-quietlight/themes/quietlight-color-theme.json' with { type: 'json' };
+import solarized_dark from '../../../../../../extensions/theme-solarized-dark/themes/solarized-dark-color-theme.json' with { type: 'json' };
+import solarized_light from '../../../../../../extensions/theme-solarized-light/themes/solarized-light-color-theme.json' with { type: 'json' };
 /* eslint-enable local/code-import-patterns */
 
 function toThemeJsonText(theme: string | object): string {
@@ -287,6 +294,8 @@ const fileIconThemeResources = {
 const fileIconThemeResourceUrls = new Set(Object.values(fileIconThemeResources).map(resource => resource.toString(true)));
 
 const themeJsonModules: Record<string, string> = {
+	'/extensions/theme-defaults/themes/2026-dark.json': toThemeJsonText(dark_2026),
+	'/extensions/theme-defaults/themes/2026-light.json': toThemeJsonText(light_2026),
 	'/extensions/theme-defaults/themes/dark_modern.json': toThemeJsonText(dark_modern),
 	'/extensions/theme-defaults/themes/dark_plus.json': toThemeJsonText(dark_plus),
 	'/extensions/theme-defaults/themes/dark_vs.json': toThemeJsonText(dark_vs),
@@ -295,6 +304,11 @@ const themeJsonModules: Record<string, string> = {
 	'/extensions/theme-defaults/themes/light_modern.json': toThemeJsonText(light_modern),
 	'/extensions/theme-defaults/themes/light_plus.json': toThemeJsonText(light_plus),
 	'/extensions/theme-defaults/themes/light_vs.json': toThemeJsonText(light_vs),
+	'/extensions/theme-abyss/themes/abyss-color-theme.json': toThemeJsonText(abyss),
+	'/extensions/theme-monokai/themes/monokai-color-theme.json': toThemeJsonText(monokai),
+	'/extensions/theme-quietlight/themes/quietlight-color-theme.json': toThemeJsonText(quietlight),
+	'/extensions/theme-solarized-dark/themes/solarized-dark-color-theme.json': toThemeJsonText(solarized_dark),
+	'/extensions/theme-solarized-light/themes/solarized-light-color-theme.json': toThemeJsonText(solarized_light),
 };
 
 const fixtureExtensionResourceLoaderService = new class implements IExtensionResourceLoaderService {
@@ -321,12 +335,12 @@ const fixtureExtensionResourceLoaderService = new class implements IExtensionRes
 	getExtensionGalleryResourceURL(): Promise<URI | undefined> { return Promise.resolve(undefined); }
 };
 
-function createBuiltInTheme(themePath: string, uiTheme: ThemeTypeSelector): ColorThemeData {
+function createBuiltInTheme(themePath: string, uiTheme: ThemeTypeSelector, extensionName = 'theme-defaults'): ColorThemeData {
 	const location = URI.parse(`file://${themePath}`);
 	return ColorThemeData.fromExtensionTheme(
 		{ id: themePath, path: themePath, uiTheme, _watch: false },
 		location,
-		ExtensionData.fromName('vscode', 'theme-defaults', true)
+		ExtensionData.fromName('vscode', extensionName, true)
 	);
 }
 
@@ -360,8 +374,19 @@ type ComponentFixtureThemeVariant = {
 const darkThemeVariant = { label: 'Dark', background: 'dark', theme: darkTheme } as const satisfies ComponentFixtureThemeVariant;
 const lightThemeVariant = { label: 'Light', background: 'light', theme: lightTheme } as const satisfies ComponentFixtureThemeVariant;
 const additionalThemeVariants = {
+	dark2026: { label: 'Dark2026', background: 'dark', theme: createBuiltInTheme('/extensions/theme-defaults/themes/2026-dark.json', ThemeTypeSelector.VS_DARK) },
+	light2026: { label: 'Light2026', background: 'light', theme: createBuiltInTheme('/extensions/theme-defaults/themes/2026-light.json', ThemeTypeSelector.VS) },
+	darkPlus: { label: 'DarkPlus', background: 'dark', theme: createBuiltInTheme('/extensions/theme-defaults/themes/dark_plus.json', ThemeTypeSelector.VS_DARK) },
+	lightPlus: { label: 'LightPlus', background: 'light', theme: createBuiltInTheme('/extensions/theme-defaults/themes/light_plus.json', ThemeTypeSelector.VS) },
+	visualStudioDark: { label: 'VisualStudioDark', background: 'dark', theme: createBuiltInTheme('/extensions/theme-defaults/themes/dark_vs.json', ThemeTypeSelector.VS_DARK) },
+	visualStudioLight: { label: 'VisualStudioLight', background: 'light', theme: createBuiltInTheme('/extensions/theme-defaults/themes/light_vs.json', ThemeTypeSelector.VS) },
 	darkHighContrast: { label: 'DarkHighContrast', background: 'dark', theme: darkHighContrastTheme },
 	lightHighContrast: { label: 'LightHighContrast', background: 'light', theme: lightHighContrastTheme },
+	abyss: { label: 'Abyss', background: 'dark', theme: createBuiltInTheme('/extensions/theme-abyss/themes/abyss-color-theme.json', ThemeTypeSelector.VS_DARK, 'theme-abyss') },
+	monokai: { label: 'Monokai', background: 'dark', theme: createBuiltInTheme('/extensions/theme-monokai/themes/monokai-color-theme.json', ThemeTypeSelector.VS_DARK, 'theme-monokai') },
+	quietLight: { label: 'QuietLight', background: 'light', theme: createBuiltInTheme('/extensions/theme-quietlight/themes/quietlight-color-theme.json', ThemeTypeSelector.VS, 'theme-quietlight') },
+	solarizedDark: { label: 'SolarizedDark', background: 'dark', theme: createBuiltInTheme('/extensions/theme-solarized-dark/themes/solarized-dark-color-theme.json', ThemeTypeSelector.VS_DARK, 'theme-solarized-dark') },
+	solarizedLight: { label: 'SolarizedLight', background: 'light', theme: createBuiltInTheme('/extensions/theme-solarized-light/themes/solarized-light-color-theme.json', ThemeTypeSelector.VS, 'theme-solarized-light') },
 } as const satisfies Record<string, ComponentFixtureThemeVariant>;
 export type ComponentFixtureAdditionalTheme = keyof typeof additionalThemeVariants;
 
