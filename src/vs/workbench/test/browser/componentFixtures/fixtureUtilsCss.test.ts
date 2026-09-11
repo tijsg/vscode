@@ -43,6 +43,16 @@ suite('Component fixture theme CSS', () => {
 			colors: { 'editor.lineHighlightBackground': '#00000000', 'editor.lineHighlightBorder': '#0f4a85' },
 			expected: { border: '1px solid rgb(15, 74, 133)', background: 'rgba(0, 0, 0, 0)' },
 		},
+		{
+			selector: ThemeTypeSelector.VS_DARK,
+			colors: { 'editor.lineHighlightBackground': '#002b36' },
+			expected: { border: '0px none rgb(0, 0, 0)', background: 'rgb(0, 43, 54)' },
+		},
+		{
+			selector: ThemeTypeSelector.VS,
+			colors: { 'editor.lineHighlightBackground': '#fdf6e3' },
+			expected: { border: '0px none rgb(0, 0, 0)', background: 'rgb(253, 246, 227)' },
+		},
 	];
 
 	for (const reverse of [false, true]) {
@@ -56,12 +66,13 @@ suite('Component fixture theme CSS', () => {
 			const actual = [];
 			const orderedVariants = reverse ? [...variants].reverse() : variants;
 			const expectedStyles = orderedVariants.map(variant => ({
-				selector: variant.selector,
+				selector: `${variant.selector} fixture-${variants.indexOf(variant)}`,
 				...resolveStyle(host, variant.expected),
 			}));
 
 			for (const variant of orderedVariants) {
-				const theme = ColorThemeData.createLoadedEmptyTheme(variant.selector, variant.selector);
+				const id = `${variant.selector} fixture-${variants.indexOf(variant)}`;
+				const theme = ColorThemeData.createLoadedEmptyTheme(id, id);
 				theme.setCustomColors(variant.colors);
 				mainWindow.document.adoptedStyleSheets = [
 					...mainWindow.document.adoptedStyleSheets,
@@ -69,7 +80,7 @@ suite('Component fixture theme CSS', () => {
 				];
 				const root = host.appendChild($('.monaco-workbench'));
 				root.classList.add(...theme.classNames);
-				lines.set(variant.selector, createCurrentLine(root));
+				lines.set(id, createCurrentLine(root));
 				actual.push({
 					outside: getCurrentLineStyle(outsideLine),
 					fixtures: [...lines].map(([selector, line]) => ({ selector, ...getCurrentLineStyle(line) })),
@@ -80,6 +91,37 @@ suite('Component fixture theme CSS', () => {
 				outside: { border: '0px none rgb(0, 0, 0)', background: 'rgba(0, 0, 0, 0)' },
 				fixtures: expectedStyles.slice(0, index + 1),
 			})));
+		});
+
+		test(`isolates color variables on nested editor theme classes in ${reverse ? 'reverse' : 'forward'} theme installation order`, () => {
+			const originalStyleSheets = [...mainWindow.document.adoptedStyleSheets];
+			disposables.add(toDisposable(() => { mainWindow.document.adoptedStyleSheets = originalStyleSheets; }));
+			const host = mainWindow.document.body.appendChild($('div'));
+			disposables.add(toDisposable(() => host.remove()));
+			const orderedVariants = reverse ? [...variants].reverse() : variants;
+			const editors: HTMLElement[] = [];
+			const actual = [];
+
+			for (const variant of orderedVariants) {
+				const id = `${variant.selector} fixture-${variants.indexOf(variant)}`;
+				const theme = ColorThemeData.createLoadedEmptyTheme(id, id);
+				theme.setCustomColors(variant.colors);
+				mainWindow.document.adoptedStyleSheets = [
+					...mainWindow.document.adoptedStyleSheets,
+					getThemeStyleSheet(theme),
+				];
+				const root = host.appendChild($('.monaco-workbench'));
+				root.classList.add(...theme.classNames);
+				const editor = root.appendChild($('.monaco-editor'));
+				editor.classList.add(variant.selector);
+				editor.style.backgroundColor = 'var(--vscode-editor-lineHighlightBackground)';
+				editors.push(editor);
+				actual.push(editors.map(element => mainWindow.getComputedStyle(element).backgroundColor));
+			}
+
+			assert.deepStrictEqual(actual, orderedVariants.map((_, index) =>
+				orderedVariants.slice(0, index + 1).map(variant => variant.expected.background)
+			));
 		});
 	}
 });
